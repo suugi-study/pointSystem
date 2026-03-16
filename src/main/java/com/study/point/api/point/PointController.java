@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @RestController
@@ -30,8 +29,10 @@ public class PointController {
                 request.memberId(),
                 request.amount(),
                 LocalDateTime.now(),
-                LocalDate.now().plusDays(request.expireInDays()),
-                request.manual()
+                LocalDateTime.now().plusDays(request.expireInDays()),
+                request.manual(),
+                "ADMIN_GRANT",
+                null
         );
         PointResponse response = pointEarnUseCase.earn(command);
         return ApiResponse.ok(response);

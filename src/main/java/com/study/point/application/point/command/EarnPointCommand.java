@@ -1,13 +1,14 @@
 package com.study.point.application.point.command;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record EarnPointCommand(
         Long memberId,
         long amount,
         LocalDateTime earnedAt,
-        LocalDate expireAt,
-        boolean manual
+        LocalDateTime expireAt,
+        boolean manual,
+        String sourceType,
+        Long sourceId
 ) {
 }

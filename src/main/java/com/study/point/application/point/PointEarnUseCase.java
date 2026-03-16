@@ -2,9 +2,10 @@ package com.study.point.application.point;
 
 import com.study.point.api.point.response.PointResponse;
 import com.study.point.application.point.command.EarnPointCommand;
+import com.study.point.application.port.out.PointPolicyConfig;
 import com.study.point.application.port.out.PointPolicyPort;
 import com.study.point.domain.point.entity.PointLedger;
-import com.study.point.domain.point.entity.PointPolicy;
+import com.study.point.domain.point.entity.PointLedgerEarnType;
 import com.study.point.domain.point.entity.PointWallet;
 import com.study.point.domain.point.repository.PointLedgerRepository;
 import com.study.point.domain.point.repository.PointWalletRepository;
@@ -24,13 +25,20 @@ public class PointEarnUseCase {
     private final PointEventProducer pointEventProducer;
 
     public PointResponse earn(EarnPointCommand command) {
-        PointPolicy policy = pointPolicyPort.loadPolicyFor(command.memberId());
+        PointPolicyConfig policy = pointPolicyPort.loadPolicy();
 
         PointWallet wallet = pointWalletRepository.findByMemberId(command.memberId())
                 .orElseGet(() -> pointWalletRepository.save(PointWallet.create(command.memberId())));
 
-        wallet.earn(command.amount(), policy);
-        PointLedger ledger = PointLedger.earn(wallet, command.amount(), command.earnedAt(), command.expireAt(), command.manual());
+        wallet.earn(command.amount(), policy.maxEarnPerOnce(), policy.maxHoldFreePoint());
+        PointLedger ledger = PointLedger.earn(
+                wallet,
+                command.amount(),
+                command.manual() ? PointLedgerEarnType.MANUAL : PointLedgerEarnType.SYSTEM,
+                command.sourceType(),
+                command.sourceId(),
+                command.expireAt()
+        );
 
         pointLedgerRepository.save(ledger);
         pointWalletRepository.save(wallet);
