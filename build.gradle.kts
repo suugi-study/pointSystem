@@ -10,13 +10,16 @@ description = "project for Spring Boot"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
 
 configurations {
 	compileOnly {
 		extendsFrom(configurations.annotationProcessor.get())
+	}
+	all {
+		exclude(group = "org.springframework.boot", module = "spring-boot-starter-logging") // use Log4j2 instead of Logback
 	}
 }
 
@@ -29,10 +32,13 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.springframework.boot:spring-boot-starter-log4j2")
 	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.springframework.session:spring-session-data-redis")
 	compileOnly("org.projectlombok:lombok")
-	runtimeOnly("com.oracle.database.jdbc:ojdbc11")
+	runtimeOnly("com.oracle.database.jdbc:ojdbc11") // Oracle JDBC driver
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.kafka:spring-kafka-test")
