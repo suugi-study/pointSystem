@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,6 +29,12 @@ public class PointEarnUseCase {
     public PointResponse earn(EarnPointCommand command) {
         PointPolicyConfig policy = pointPolicyPort.loadPolicy();
 
+        Optional<PointLedger> existing = pointLedgerRepository.findByRequestId(command.requestId());
+        if (existing.isPresent()) {
+            PointWallet wallet = existing.get().getWallet();
+            return new PointResponse(wallet.getId(), wallet.getMemberId(), wallet.getFreeBalance(), wallet.getUpdatedAt());
+        }
+
         PointWallet wallet = pointWalletRepository.findByMemberId(command.memberId())
                 .orElseGet(() -> pointWalletRepository.save(PointWallet.create(command.memberId())));
 
@@ -37,7 +45,8 @@ public class PointEarnUseCase {
                 command.manual() ? PointLedgerEarnType.MANUAL : PointLedgerEarnType.SYSTEM,
                 command.sourceType(),
                 command.sourceId(),
-                command.expireAt()
+                command.expireAt(),
+                command.requestId()
         );
 
         pointLedgerRepository.save(ledger);

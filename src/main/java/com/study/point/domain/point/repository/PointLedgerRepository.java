@@ -4,4 +4,6 @@ import com.study.point.domain.point.entity.PointLedger;
 
 public interface PointLedgerRepository {
     PointLedger save(PointLedger ledger);
+
+    java.util.Optional<PointLedger> findByRequestId(String requestId);
 }

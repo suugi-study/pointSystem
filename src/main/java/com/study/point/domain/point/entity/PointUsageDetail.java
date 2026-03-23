@@ -22,7 +22,13 @@ import java.time.LocalDateTime;
  * - used_at 으로 사용 시점을 남겨 포렌식/정산에 활용한다.
  */
 @Entity
-@Table(name = "point_usage_detail")
+@Table(
+        name = "point_usage_detail",
+        indexes = {
+                @jakarta.persistence.Index(name = "idx_usage_ledger_id", columnList = "ledger_id"),
+                @jakarta.persistence.Index(name = "idx_usage_order_id", columnList = "order_id")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointUsageDetail {

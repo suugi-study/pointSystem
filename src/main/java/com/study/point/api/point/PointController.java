@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +33,8 @@ public class PointController {
                 LocalDateTime.now().plusDays(request.expireInDays()),
                 request.manual(),
                 "ADMIN_GRANT",
-                null
+                null,
+                request.requestId() != null ? request.requestId() : UUID.randomUUID().toString()
         );
         PointResponse response = pointEarnUseCase.earn(command);
         return ApiResponse.ok(response);

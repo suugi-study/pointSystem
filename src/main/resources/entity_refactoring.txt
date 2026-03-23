@@ -1,0 +1,65 @@
+[현재 ERD 평가]
+
+좋은 점
+- POINT_POLICY
+  - 하드코딩 없는 정책 제어 요구사항과 잘 맞음
+  - 1회 최대 적립 가능 포인트, 최대 보유 무료포인트, 기본 만료일 등을 운영 중 변경 가능
+
+- POINT_WALLET
+  - 회원별 현재 무료포인트 잔액과 집계(total_earned, total_used)를 관리하는 루트 테이블로 적절
+  - version 컬럼이 있어 낙관적 락 적용 구조와 잘 맞음
+
+- POINT_LEDGER
+  - 적립 건별 amount / remaining / expire_at 을 가질 수 있어
+    "어느 시점에 적립된 포인트가 얼마나 남았는지" 관리 가능
+  - earn_type, source_type, source_id 로 수기 지급/이벤트 지급/주문 적립 구분 가능
+
+- POINT_USAGE_DETAIL
+  - ledger_id + order_id + used_amount 구조로
+    "어떤 적립분이 어떤 주문에 얼마 쓰였는지" 추적 가능
+  - 요구사항 1-3에 매우 잘 맞음
+
+[보완이 필요한 점]
+
+1) POINT_LEDGER.is_expired
+- 현재 컬럼명만 보면 "만료 여부"인데,
+  실제로는 expire_at 과 remaining 으로 어느 정도 계산 가능
+- 단순 boolean/char 로 두면 데이터 불일치 위험이 있음
+- 추천:
+  - status (ACTIVE, EXHAUSTED, EXPIRED) 로 명확화
+  - 또는 expiration_processed_yn 처럼 "배치 처리 여부" 의미로 변경
+
+2) 멱등성(idempotency) 컬럼 부족
+- 쇼핑몰/포인트 API는 중복 요청 방지가 매우 중요
+- 같은 요청이 재시도되면 중복 적립될 수 있음
+- 추천:
+  - POINT_LEDGER 또는 별도 POINT_COMMAND_LOG 에
+    request_id / idempotency_key UNIQUE 추가
+
+3) 취소/환불/보정 확장성
+- 현재 구조는 적립과 사용 추적에는 적합
+- 하지만 운영에서는 주문 취소, 포인트 환원, 관리 보정이 거의 반드시 생김
+- 추천:
+  - 향후 POINT_TRANSACTION(이벤트 원장) 추가 고려
+  - event_type: EARN / USE / EXPIRE / RESTORE / ADJUST
+
+4) 정책 테이블 타입 안정성
+- POINT_POLICY(policy_key, policy_value) 단일 key-value 도 가능
+- 하지만 운영 규모가 커지면 타입/단위/유효기간 관리가 불편
+- 추천:
+  - policy_key UNIQUE 유지
+  - 필요 시 data_type, unit, enabled, updated_by, effective_from 추가
+
+5) 제약조건/인덱스 보강 필요
+- CHECK, UNIQUE, INDEX 가 매우 중요
+- 예:
+  - POINT_WALLET.member_id UNIQUE
+  - POINT_LEDGER(wallet_id, expire_at, remaining, status) 인덱스
+  - POINT_LEDGER(source_type, source_id) 인덱스
+  - POINT_USAGE_DETAIL(order_id) 인덱스
+  - amount > 0, remaining >= 0 같은 CHECK 제약
+
+6) 시간 컬럼 일관성
+- created_at / updated_at 기준 통일 필요
+- Oracle TIMESTAMP 기준으로 저장하되
+  애플리케이션/배치/이벤트 기준 시간대 정책도 정해야 함

@@ -8,6 +8,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -24,7 +26,11 @@ import java.time.LocalDateTime;
  * - created_at / updated_at 은 적립·사용 시각을 기록한다.
  */
 @Entity
-@Table(name = "point_wallet")
+@Table(
+        name = "point_wallet",
+        uniqueConstraints = @jakarta.persistence.UniqueConstraint(name = "uq_wallet_member", columnNames = "member_id"),
+        indexes = @jakarta.persistence.Index(name = "idx_wallet_member_id", columnList = "member_id")
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointWallet {
@@ -93,5 +99,20 @@ public class PointWallet {
 
     private void touch() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = createdAt;
+        }
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

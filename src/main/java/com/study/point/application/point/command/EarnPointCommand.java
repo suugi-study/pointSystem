@@ -9,6 +9,7 @@ public record EarnPointCommand(
         LocalDateTime expireAt,
         boolean manual,
         String sourceType,
-        Long sourceId
+        Long sourceId,
+        String requestId
 ) {
 }

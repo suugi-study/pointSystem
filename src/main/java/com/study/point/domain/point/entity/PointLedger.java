@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,9 +25,16 @@ import java.time.LocalDateTime;
  * - 적립 건(1원 단위)을 개별 행으로 기록하여 “어느 주문/이벤트/관리자 지급인지”와 만료일(expire_at)을 추적.
  * - remaining 컬럼으로 사용 후 잔여 금액을 관리하고, earn_type(SYSTEM/MANUAL)으로 수기 지급 식별.
  * - wallet_id FK 로 지갑과 연결하여 회원 단위 잔액 집계와 정합성을 유지한다.
+ * - requestId UNIQUE 로 중복 적립을 막고, status(ACTIVE/EXHAUSTED/EXPIRED)로 만료/소진 상태를 명확히 표현한다.
  */
 @Entity
-@Table(name = "point_ledger")
+@Table(
+        name = "point_ledger",
+        indexes = {
+                @jakarta.persistence.Index(name = "idx_ledger_wallet_expire", columnList = "wallet_id, expire_at, status"),
+                @jakarta.persistence.Index(name = "idx_ledger_source", columnList = "source_type, source_id")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointLedger {
@@ -49,6 +58,13 @@ public class PointLedger {
     @Column(name = "earn_type", nullable = false, length = 20)
     private PointLedgerEarnType earnType;
 
+    /**
+     * 멱등성을 보장하기 위한 요청 식별자 (동일 요청 중복 적립 방지).
+     * entity_refactoring.txt #2 참고: UNIQUE 제약 필요.
+     */
+    @Column(name = "request_id", length = 100, unique = true, updatable = false)
+    private String requestId;
+
     @Column(name = "source_type", length = 50)
     private String sourceType;
 
@@ -58,14 +74,21 @@ public class PointLedger {
     @Column(name = "expire_at", nullable = false)
     private LocalDateTime expireAt;
 
-    @Column(name = "is_expired", nullable = false)
-    private boolean expired;
+    /**
+     * 만료 여부 대신 상태값으로 관리 (ACTIVE/EXHAUSTED/EXPIRED).
+     * entity_refactoring.txt #1 권고 반영.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private PointLedgerStatus status;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
     private PointLedger(PointWallet wallet, long amount, long remaining, PointLedgerEarnType earnType,
-                        String sourceType, Long sourceId, LocalDateTime expireAt, boolean expired) {
+                        String sourceType, Long sourceId, LocalDateTime expireAt, String requestId) {
         this.wallet = wallet;
         this.amount = amount;
         this.remaining = remaining;
@@ -73,13 +96,15 @@ public class PointLedger {
         this.sourceType = sourceType;
         this.sourceId = sourceId;
         this.expireAt = expireAt;
-        this.expired = expired;
+        this.status = PointLedgerStatus.ACTIVE;
+        this.requestId = requestId;
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
     }
 
     public static PointLedger earn(PointWallet wallet, long amount, PointLedgerEarnType earnType,
-                                   String sourceType, Long sourceId, LocalDateTime expireAt) {
-        return new PointLedger(wallet, amount, amount, earnType, sourceType, sourceId, expireAt, false);
+                                   String sourceType, Long sourceId, LocalDateTime expireAt, String requestId) {
+        return new PointLedger(wallet, amount, amount, earnType, sourceType, sourceId, expireAt, requestId);
     }
 
     public void use(long useAmount) {
@@ -87,9 +112,27 @@ public class PointLedger {
             throw new IllegalArgumentException("Use amount exceeds remaining balance");
         }
         this.remaining -= useAmount;
+        this.updatedAt = LocalDateTime.now();
+        if (this.remaining == 0) {
+            this.status = PointLedgerStatus.EXHAUSTED;
+        }
     }
 
     public void markExpired() {
-        this.expired = true;
+        this.status = PointLedgerStatus.EXPIRED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
