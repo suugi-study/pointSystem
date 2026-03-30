@@ -9,6 +9,7 @@ import com.study.point.domain.point.entity.PointLedgerEarnType;
 import com.study.point.domain.point.entity.PointWallet;
 import com.study.point.domain.point.repository.PointLedgerRepository;
 import com.study.point.domain.point.repository.PointWalletRepository;
+import com.study.point.domain.point.vo.EarnPolicy;
 import com.study.point.infrastructure.kafka.PointEventProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,8 @@ public class PointEarnUseCase {
         PointWallet wallet = pointWalletRepository.findByMemberId(command.memberId())
                 .orElseGet(() -> pointWalletRepository.save(PointWallet.create(command.memberId())));
 
-        wallet.earn(command.amount(), policy.maxEarnPerOnce(), policy.maxHoldFreePoint());
+        EarnPolicy earnPolicy = EarnPolicy.of(policy.maxEarnPerOnce(), policy.maxHoldFreePoint());
+        wallet.earn(command.amount(), earnPolicy);
         PointLedger ledger = PointLedger.earn(
                 wallet,
                 command.amount(),

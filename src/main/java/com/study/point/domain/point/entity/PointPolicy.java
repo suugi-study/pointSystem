@@ -2,6 +2,7 @@ package com.study.point.domain.point.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -9,6 +10,9 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "point_policy")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointPolicy {
@@ -54,9 +59,11 @@ public class PointPolicy {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -71,8 +78,6 @@ public class PointPolicy {
         this.enabled = enabled;
         this.effectiveFrom = effectiveFrom;
         this.updatedBy = updatedBy;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
     }
 
     public static PointPolicy of(String key, long value, String description,
@@ -86,6 +91,16 @@ public class PointPolicy {
         this.enabled = enabled;
         this.effectiveFrom = effectiveFrom;
         this.updatedBy = updatedBy;
-        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isActive() {
+        return this.enabled && !LocalDateTime.now().isBefore(this.effectiveFrom);
+    }
+
+    public long getActiveValue() {
+        if (!isActive()) {
+            throw new IllegalStateException("Policy [" + key + "] is not active yet or disabled");
+        }
+        return this.value;
     }
 }

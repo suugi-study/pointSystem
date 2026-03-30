@@ -2,6 +2,7 @@ package com.study.point.domain.point.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ForeignKey;
@@ -10,12 +11,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +37,7 @@ import java.time.LocalDateTime;
                 @jakarta.persistence.Index(name = "idx_ledger_source", columnList = "source_type, source_id")
         }
 )
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointLedger {
@@ -82,9 +85,12 @@ public class PointLedger {
     @Column(name = "status", nullable = false, length = 20)
     private PointLedgerStatus status;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     private PointLedger(PointWallet wallet, long amount, long remaining, PointLedgerEarnType earnType,
@@ -98,8 +104,6 @@ public class PointLedger {
         this.expireAt = expireAt;
         this.status = PointLedgerStatus.ACTIVE;
         this.requestId = requestId;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
     }
 
     public static PointLedger earn(PointWallet wallet, long amount, PointLedgerEarnType earnType,
@@ -107,32 +111,18 @@ public class PointLedger {
         return new PointLedger(wallet, amount, amount, earnType, sourceType, sourceId, expireAt, requestId);
     }
 
-    public void use(long useAmount) {
+    public PointUsageDetail use(long useAmount, Long orderId) {
         if (useAmount > remaining) {
             throw new IllegalArgumentException("Use amount exceeds remaining balance");
         }
         this.remaining -= useAmount;
-        this.updatedAt = LocalDateTime.now();
         if (this.remaining == 0) {
             this.status = PointLedgerStatus.EXHAUSTED;
         }
+        return PointUsageDetail.of(this, orderId, useAmount);
     }
 
     public void markExpired() {
         this.status = PointLedgerStatus.EXPIRED;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PrePersist
-    void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = createdAt;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

@@ -2,6 +2,7 @@ package com.study.point.domain.point.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +13,8 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +23,7 @@ import java.time.LocalDateTime;
  * - 특정 원장(ledger_id)에서 어느 주문(order_id)에 얼마를 사용했는지 1원 단위로 기록한다.
  * - README 요구사항 “어떤 주문에서 사용되었는지 추적”을 만족하기 위한 테이블 매핑.
  * - used_at 으로 사용 시점을 남겨 포렌식/정산에 활용한다.
+ * - 정적 팩토리(of)로 생성 책임을 통일해 도메인 규칙 누락을 방지한다.
  */
 @Entity
 @Table(
@@ -29,6 +33,7 @@ import java.time.LocalDateTime;
                 @jakarta.persistence.Index(name = "idx_usage_order_id", columnList = "order_id")
         }
 )
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointUsageDetail {
@@ -48,13 +53,15 @@ public class PointUsageDetail {
     @Column(name = "used_amount", nullable = false)
     private long usedAmount;
 
-    @Column(name = "used_at", nullable = false)
+    @CreatedDate
+    @Column(name = "used_at", nullable = false, updatable = false)
     private LocalDateTime usedAt;
 
-    public PointUsageDetail(PointLedger ledger, Long orderId, long usedAmount) {
-        this.ledger = ledger;
-        this.orderId = orderId;
-        this.usedAmount = usedAmount;
-        this.usedAt = LocalDateTime.now();
+    public static PointUsageDetail of(PointLedger ledger, Long orderId, long usedAmount) {
+        PointUsageDetail detail = new PointUsageDetail();
+        detail.ledger = ledger;
+        detail.orderId = orderId;
+        detail.usedAmount = usedAmount;
+        return detail;
     }
 }

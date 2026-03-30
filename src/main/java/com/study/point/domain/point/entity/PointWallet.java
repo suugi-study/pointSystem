@@ -2,18 +2,22 @@ package com.study.point.domain.point.entity;
 
 import com.study.point.domain.point.exception.InsufficientPointException;
 import com.study.point.domain.point.exception.PointMaxHoldExceededException;
+import com.study.point.domain.point.vo.EarnPolicy;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -28,9 +32,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "point_wallet",
-        uniqueConstraints = @jakarta.persistence.UniqueConstraint(name = "uq_wallet_member", columnNames = "member_id"),
+        uniqueConstraints = @UniqueConstraint(name = "uq_wallet_member", columnNames = "member_id"),
         indexes = @jakarta.persistence.Index(name = "idx_wallet_member_id", columnList = "member_id")
 )
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PointWallet {
@@ -56,9 +61,11 @@ public class PointWallet {
     @Column(name = "version", nullable = false)
     private long version;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -68,24 +75,21 @@ public class PointWallet {
         this.totalEarned = 0L;
         this.totalUsed = 0L;
         this.version = 0L;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
     }
 
     public static PointWallet create(Long memberId) {
         return new PointWallet(memberId);
     }
 
-    public void earn(long amount, long maxEarnPerOnce, long maxHoldFreePoint) {
-        if (amount > maxEarnPerOnce) {
+    public void earn(long amount, EarnPolicy policy) {
+        if (amount > policy.maxEarnPerOnce()) {
             throw new PointMaxHoldExceededException("Exceeded per-transaction earn limit");
         }
-        if (freeBalance + amount > maxHoldFreePoint) {
+        if (freeBalance + amount > policy.maxHoldFreePoint()) {
             throw new PointMaxHoldExceededException("Wallet hold limit exceeded");
         }
         this.freeBalance += amount;
         this.totalEarned += amount;
-        touch();
     }
 
     public void use(long amount) {
@@ -94,25 +98,5 @@ public class PointWallet {
         }
         this.freeBalance -= amount;
         this.totalUsed += amount;
-        touch();
-    }
-
-    private void touch() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PrePersist
-    void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (updatedAt == null) {
-            updatedAt = createdAt;
-        }
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }
