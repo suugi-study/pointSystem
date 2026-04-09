@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -36,25 +37,31 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Comment("포인트 사용 상세 - 적립분별 어느 주문에서 사용했는지 추적")
 public class PointUsageDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "detail_id")
+    @Comment("포인트 사용 상세 PK")
     private Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "ledger_id", nullable = false, foreignKey = @ForeignKey(name = "fk_usage_ledger"))
+    @Comment("사용된 적립 원장 ID")
     private PointLedger ledger;
 
     @Column(name = "order_id", nullable = false)
+    @Comment("사용된 주문 ID")
     private Long orderId;
 
     @Column(name = "used_amount", nullable = false)
+    @Comment("해당 원장에서 사용된 금액 (1원 단위)")
     private long usedAmount;
 
     @CreatedDate
     @Column(name = "used_at", nullable = false, updatable = false)
+    @Comment("포인트 사용 일시")
     private LocalDateTime usedAt;
 
     public static PointUsageDetail of(PointLedger ledger, Long orderId, long usedAmount) {

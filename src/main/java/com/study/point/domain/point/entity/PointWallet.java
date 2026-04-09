@@ -15,6 +15,7 @@ import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -38,35 +39,46 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PointWallet {
+@Comment("회원별 포인트 지갑 (잔액 집계)")
+public class
+
+PointWallet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "wallet_id")
+    @Comment("포인트 지갑 PK")
     private Long id;
 
     @Column(name = "member_id", nullable = false, unique = true)
+    @Comment("회원 ID (1:1 고유 지갑)")
     private Long memberId;
 
     @Column(name = "free_balance", nullable = false)
+    @Comment("현재 사용 가능한 무료 포인트 잔액")
     private long freeBalance;
 
     @Column(name = "total_earned", nullable = false)
+    @Comment("누적 적립 총액")
     private long totalEarned;
 
     @Column(name = "total_used", nullable = false)
+    @Comment("누적 사용 총액")
     private long totalUsed;
 
     @Version
     @Column(name = "version", nullable = false)
+    @Comment("JPA @Version - Optimistic Lock용")
     private long version;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
+    @Comment("지갑 생성 시각")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
+    @Comment("지갑 최종 수정 시각")
     private LocalDateTime updatedAt;
 
     private PointWallet(Long memberId) {

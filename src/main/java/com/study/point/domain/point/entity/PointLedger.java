@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -40,25 +41,31 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Comment("포인트 적립 원장 (1원 단위 추적)")
 public class PointLedger {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ledger_id")
+    @Comment("포인트 원장 PK")
     private Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "wallet_id", nullable = false, foreignKey = @ForeignKey(name = "fk_ledger_wallet"))
+    @Comment("소유 지갑 ID (FK)")
     private PointWallet wallet;
 
     @Column(nullable = false)
+    @Comment("적립 원금 (최초 적립 금액)")
     private long amount;
 
     @Column(nullable = false)
+    @Comment("사용 후 남은 잔액 (0이면 전액 사용)")
     private long remaining;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "earn_type", nullable = false, length = 20)
+    @Comment("SYSTEM: 자동적립, MANUAL: 관리자 수기지급")
     private PointLedgerEarnType earnType;
 
     /**
@@ -66,15 +73,19 @@ public class PointLedger {
      * entity_refactoring.txt #2 참고: UNIQUE 제약 필요.
      */
     @Column(name = "request_id", length = 100, unique = true, updatable = false)
+    @Comment("API 멱등성 키 (중복 적립 방지)")
     private String requestId;
 
     @Column(name = "source_type", length = 50)
+    @Comment("적립 원천 구분 (ORDER/ADMIN_GRANT/EVENT)")
     private String sourceType;
 
     @Column(name = "source_id")
+    @Comment("원천 엔티티 식별자 (주문번호 등)")
     private Long sourceId;
 
     @Column(name = "expire_at", nullable = false)
+    @Comment("만료일시 (최소 1일~최대 5년 미만)")
     private LocalDateTime expireAt;
 
     /**
@@ -83,14 +94,17 @@ public class PointLedger {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
+    @Comment("ACTIVE/EXHAUSTED/EXPIRED 상태값")
     private PointLedgerStatus status;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
+    @Comment("적립 기록 생성 시각")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
+    @Comment("적립 기록 최종 수정 시각")
     private LocalDateTime updatedAt;
 
     private PointLedger(PointWallet wallet, long amount, long remaining, PointLedgerEarnType earnType,

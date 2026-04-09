@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -28,43 +29,55 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Comment("포인트 정책 설정 (1회 최대 적립, 최대 보유 등)")
 public class PointPolicy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "policy_id")
+    @Comment("포인트 정책 PK")
     private Long id;
 
     @Column(name = "policy_key", nullable = false, unique = true, length = 100)
+    @Comment("정책 키: MAX_EARN_PER_ONCE(1회최대적립), MAX_HOLD_FREE_POINT(최대보유)")
     private String key;
 
     @Column(name = "policy_value", nullable = false)
+    @Comment("정책 값 (원 단위)")
     private long value;
 
     @Column(length = 500)
+    @Comment("정책 설명 및 비고")
     private String description;
 
     @Column(name = "data_type", length = 30, nullable = false)
+    @Comment("값 타입(NUMBER/STRING 등)")
     private String dataType; // e.g. NUMBER, STRING
 
     @Column(name = "unit", length = 30)
+    @Comment("단위(POINT/DAY 등)")
     private String unit; // e.g. POINT, DAY
 
     @Column(name = "enabled", nullable = false)
+    @Comment("Y/N 사용 여부")
     private boolean enabled;
 
     @Column(name = "effective_from", nullable = false)
+    @Comment("정책 적용 시작 시점")
     private LocalDateTime effectiveFrom;
 
     @Column(name = "updated_by", length = 100)
+    @Comment("최근 수정자")
     private String updatedBy;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
+    @Comment("생성 일시 (자동 입력)")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
+    @Comment("수정 일시 (자동 업데이트)")
     private LocalDateTime updatedAt;
 
     private PointPolicy(String key, long value, String description,
