@@ -10,7 +10,7 @@ description = "project for Spring Boot"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
 
@@ -20,6 +20,7 @@ configurations {
 	}
 	all {
 		exclude(group = "org.springframework.boot", module = "spring-boot-starter-logging") // use Log4j2 instead of Logback
+		exclude(group = "ch.qos.logback")
 	}
 }
 

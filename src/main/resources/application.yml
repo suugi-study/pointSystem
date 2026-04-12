@@ -2,9 +2,9 @@ spring:
   application:
     name: pointWallet
   datasource:
-    url: jdbc:oracle:thin:@//localhost:1521/ORCLCDB
-    username: your_username
-    password: your_password
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: point_app
+    password: PointApp123!
     driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     hibernate:

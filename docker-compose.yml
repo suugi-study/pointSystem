@@ -1,0 +1,26 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  oracle:
+    image: gvenzl/oracle-free:latest
+    container_name: point-oracle
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PASSWORD: "suugie123!@#"
+      APP_USER: "point_app"
+      APP_USER_PASSWORD: "PointApp123!"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./docker/oracle/init:/container-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  oracle_data:
