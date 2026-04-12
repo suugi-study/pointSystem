@@ -15,6 +15,9 @@ public class PointEventProducer {
     }
 
     public void publishEarned(PointLedger ledger) {
-        kafkaTemplate.send(TOPIC_EARNED, String.valueOf(ledger.getId()), ledger);
+        // 지갑 단위 순차 처리:
+        //  - message key를 walletId로 고정하면 Kafka 파티셔너가 같은 key를 동일 파티션에 배치한다.
+        //  - 동일 지갑 건은 Consumer에서 사실상 단일 writer처럼 순차로 처리되어 동시성 충돌이 줄어든다.
+        kafkaTemplate.send(TOPIC_EARNED, String.valueOf(ledger.getWallet().getId()), ledger);
     }
 }

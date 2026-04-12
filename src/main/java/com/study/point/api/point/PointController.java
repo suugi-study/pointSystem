@@ -20,18 +20,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * 포인트 적립/사용 HTTP 진입점.
- * - 입구 역할만 담당하며 시나리오는 유스케이스로 위임.
- * - 요청/응답 DTO를 ApiResponse로 감싸 일관된 포맷을 유지한다.
+ * 포인트 적립/사용 Controller
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/points")
 public class PointController {
 
-    /** 포인트 적립 시나리오 실행기 */
+    /** 포인트 적립 */
     private final PointEarnUseCase pointEarnUseCase;
-    /** 포인트 사용(차감) 시나리오 실행기 */
+    /** 포인트 사용(차감) */
     private final PointUseUseCase pointUseUseCase;
 
     /**

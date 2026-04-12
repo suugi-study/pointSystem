@@ -8,22 +8,27 @@ CREATE TABLE point_policy (
     description VARCHAR2(500),
     data_type    VARCHAR2(30)   DEFAULT 'NUMBER' NOT NULL,
     unit         VARCHAR2(30),
-    enabled      CHAR(1)        DEFAULT 'Y' NOT NULL,
+    enabled      NUMBER(1)      DEFAULT 1 NOT NULL,
     effective_from TIMESTAMP    DEFAULT SYSTIMESTAMP NOT NULL,
     updated_by   VARCHAR2(100),
     created_at  TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at  TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
-    CONSTRAINT uq_policy_key UNIQUE (policy_key)
+    CONSTRAINT uq_policy_key UNIQUE (policy_key),
+    CONSTRAINT ck_policy_enabled CHECK (enabled IN (0,1))
 );
 
 COMMENT ON TABLE  point_policy              IS '포인트 정책 설정 (1회 최대 적립, 최대 보유 등)';
+COMMENT ON COLUMN point_policy.policy_id   IS '포인트 정책 PK';
 COMMENT ON COLUMN point_policy.policy_key   IS '정책 키: MAX_EARN_PER_ONCE(1회최대적립), MAX_HOLD_FREE_POINT(최대보유)';
 COMMENT ON COLUMN point_policy.policy_value IS '정책 값 (원 단위)';
+COMMENT ON COLUMN point_policy.description  IS '정책 설명 및 비고';
 COMMENT ON COLUMN point_policy.data_type    IS '값 타입(NUMBER/STRING 등)';
 COMMENT ON COLUMN point_policy.unit         IS '단위(POINT/DAY 등)';
 COMMENT ON COLUMN point_policy.enabled      IS 'Y/N 사용 여부';
 COMMENT ON COLUMN point_policy.effective_from IS '정책 적용 시작 시점';
 COMMENT ON COLUMN point_policy.updated_by   IS '최근 수정자';
+COMMENT ON COLUMN point_policy.created_at   IS '생성 일시 (자동 입력)';
+COMMENT ON COLUMN point_policy.updated_at   IS '수정 일시 (자동 업데이트)';
 
 -- 기본 정책 데이터
 INSERT INTO point_policy (policy_key, policy_value, description)
@@ -49,8 +54,14 @@ CREATE TABLE point_wallet (
 );
 
 COMMENT ON TABLE  point_wallet              IS '회원별 포인트 지갑 (잔액 집계)';
+COMMENT ON COLUMN point_wallet.wallet_id    IS '포인트 지갑 PK';
+COMMENT ON COLUMN point_wallet.member_id    IS '회원 ID (1:1 고유 지갑)';
 COMMENT ON COLUMN point_wallet.free_balance IS '현재 사용 가능한 무료 포인트 잔액';
+COMMENT ON COLUMN point_wallet.total_earned IS '누적 적립 총액';
+COMMENT ON COLUMN point_wallet.total_used   IS '누적 사용 총액';
 COMMENT ON COLUMN point_wallet.version      IS 'JPA @Version - Optimistic Lock용';
+COMMENT ON COLUMN point_wallet.created_at   IS '지갑 생성 시각';
+COMMENT ON COLUMN point_wallet.updated_at   IS '지갑 최종 수정 시각';
 
 CREATE INDEX idx_wallet_member_id ON point_wallet (member_id);
 
@@ -80,15 +91,21 @@ CREATE TABLE point_ledger (
 );
 
 COMMENT ON TABLE  point_ledger              IS '포인트 적립 원장 (1원 단위 추적)';
+COMMENT ON COLUMN point_ledger.ledger_id    IS '포인트 원장 PK';
+COMMENT ON COLUMN point_ledger.wallet_id    IS '소유 지갑 ID (FK)';
+COMMENT ON COLUMN point_ledger.amount       IS '적립 원금 (최초 적립 금액)';
 COMMENT ON COLUMN point_ledger.earn_type    IS 'SYSTEM: 자동적립, MANUAL: 관리자 수기지급';
 COMMENT ON COLUMN point_ledger.source_type  IS '적립 원천 구분 (ORDER/ADMIN_GRANT/EVENT)';
+COMMENT ON COLUMN point_ledger.source_id    IS '원천 엔티티 식별자 (주문번호 등)';
 COMMENT ON COLUMN point_ledger.remaining    IS '사용 후 남은 잔액 (0이면 전액 사용)';
 COMMENT ON COLUMN point_ledger.expire_at    IS '만료일시 (최소 1일~최대 5년 미만)';
 COMMENT ON COLUMN point_ledger.status       IS 'ACTIVE/EXHAUSTED/EXPIRED 상태값';
 COMMENT ON COLUMN point_ledger.request_id   IS 'API 멱등성 키 (중복 적립 방지)';
+COMMENT ON COLUMN point_ledger.created_at   IS '적립 기록 생성 시각';
+COMMENT ON COLUMN point_ledger.updated_at   IS '적립 기록 최종 수정 시각';
 
-CREATE INDEX idx_ledger_wallet_id   ON point_ledger (wallet_id, expire_at, status);
-CREATE INDEX idx_ledger_source_id   ON point_ledger (source_type, source_id);
+CREATE INDEX idx_ledger_wallet_expire ON point_ledger (wallet_id, expire_at, status);
+CREATE INDEX idx_ledger_source        ON point_ledger (source_type, source_id);
 
 
 -- ============================================================
@@ -105,9 +122,11 @@ CREATE TABLE point_usage_detail (
 );
 
 COMMENT ON TABLE  point_usage_detail            IS '포인트 사용 상세 - 적립분별 어느 주문에서 사용했는지 추적';
+COMMENT ON COLUMN point_usage_detail.detail_id  IS '포인트 사용 상세 PK';
 COMMENT ON COLUMN point_usage_detail.ledger_id  IS '사용된 적립 원장 ID';
 COMMENT ON COLUMN point_usage_detail.order_id   IS '사용된 주문 ID';
 COMMENT ON COLUMN point_usage_detail.used_amount IS '해당 원장에서 사용된 금액 (1원 단위)';
+COMMENT ON COLUMN point_usage_detail.used_at    IS '포인트 사용 일시';
 
 CREATE INDEX idx_usage_ledger_id ON point_usage_detail (ledger_id);
 CREATE INDEX idx_usage_order_id  ON point_usage_detail (order_id);

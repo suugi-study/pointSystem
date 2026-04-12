@@ -2,12 +2,13 @@ package com.study.point.application.point;
 
 import com.study.point.domain.point.entity.PointWallet;
 import com.study.point.domain.point.repository.PointWalletRepository;
+import com.study.point.infrastructure.redis.RedisLockManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.study.point.api.point.response.PointResponse;
-import java.time.LocalDateTime;
+import java.time.Duration;
 
 /**
  * 사용(차감) 유스케이스 서비스 설계 메모
@@ -21,13 +22,24 @@ import java.time.LocalDateTime;
 public class PointUseUseCase {
 
     private final PointWalletRepository pointWalletRepository;
+    private final RedisLockManager redisLockManager;
 
     public PointResponse use(Long memberId, long amount, Long orderId) {
-        PointWallet wallet = pointWalletRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for member " + memberId));
-        // TODO: 주문별 사용 상세 기록(PointUsageDetail 생성)은 주문/원장 매핑 로직 합류 시 추가
-        wallet.use(amount);
-        pointWalletRepository.save(wallet);
-        return new PointResponse(wallet.getId(), wallet.getMemberId(), wallet.getFreeBalance(), wallet.getUpdatedAt());
+        String lockKey = "lock:wallet:" + memberId;
+        // 1단계 게이트(경량): Redis 락으로 단기간 겹침만 필터링 (TPS 1000 시 큐 폭증 방지)
+        String token = redisLockManager.tryLock(lockKey, Duration.ofSeconds(5));
+        if (token == null) {
+            throw new IllegalStateException("Concurrent use request in progress for member " + memberId);
+        }
+        try {
+            PointWallet wallet = pointWalletRepository.findByMemberId(memberId)
+                    .orElseThrow(() -> new IllegalArgumentException("Wallet not found for member " + memberId));
+            // TODO: 주문별 사용 상세 기록(PointUsageDetail 생성)은 주문/원장 매핑 로직 합류 시 추가
+            wallet.use(amount);
+            pointWalletRepository.save(wallet);
+            return new PointResponse(wallet.getId(), wallet.getMemberId(), wallet.getFreeBalance(), wallet.getUpdatedAt());
+        } finally {
+            redisLockManager.unlock(lockKey, token);
+        }
     }
 }
