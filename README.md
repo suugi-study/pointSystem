@@ -120,3 +120,47 @@ com.study.ponint
     |
     v
 [DB]
+
+```
+
+-------------------
+## Naming Conventions
+본 프로젝트에서 사용 중인(또는 앞으로 사용할) 메소드·필드·클래스·패키지 명명 규칙을 정리했다. Java/Spring 표준과 현재 코드 패턴을 기준으로 한다.
+
+### 패키지 / 모듈
+- 루트 패키지: com.study.point.
+- 도메인별 하위 패키지: api, application, domain, infrastructure.
+- 세부 역할: api.point, application.point, domain.point.{entity,vo,repository,exception}, infrastructure.{persistence,redis,kafka} 등. 패키지명은 모두 소문자, 단어 구분은 점(.)으로만 분리한다.
+- 클래스 / 인터페이스
+- 도메인 엔티티·VO: PascalCase, 명사형 (PointWallet, PointLedger, PointBalance, EarnPolicy).
+- 유스케이스: PascalCase + UseCase 접미사 (PointEarnUseCase, PointUseUseCase).
+- 포트/어댑터: 인터페이스는 Port, 구현/설정은 구체적 명사 (PointPolicyPort, PointPolicyCacheAdapter, KafkaConfig).
+- 레포지토리 인터페이스: ~Repository (PointWalletRepository, PointLedgerRepository).
+- DTO: 요청은 ~Request, 응답은 ~Response (EarnPointRequest, UsePointRequest, PointResponse).
+- 메인 클래스: PointWalletApplication.
+- 예외: ~Exception (InsufficientPointException, PointMaxHoldExceededException).
+
+### 메소드
+동사+목적어의 camelCase 사용.
+- 도메인 동작: earn, use.
+- 생성 정적 팩토리: create.
+- 유스케이스/서비스: 주요 의도를 한 단어 또는 짧은 구로 표현 (earn, use), 부가 정보는 파라미터로 전달.
+- 테스트 메소드: 명세형 한글 설명 또는 given/when/then 패턴 중 하나로 일관되게 유지. 현재는 한글 설명을 사용하므로 계속 유지 권장.
+
+### 필드 / 파라미터
+-  camelCase 사용 (memberId, freeBalance, totalEarned, requestId).
+-  Boolean은 is/has 접두사를 강제하지 않음(현재 manual, success 등 상태 표현은 의미 있는 명사/형용사 사용).
+- 상수는 UPPER_SNAKE_CASE (MAX_SIZE 등) – 필요 시 적용.
+
+### 컬럼 / 테이블 (JPA)
+- 데이터베이스 테이블·컬럼은 snake_case (point_wallet, free_balance, member_id).
+- @Column(name = "...")으로 명시해 자바 필드명(camelCase)와 DB 컬럼명(snake_case)을 매핑.
+
+### 기타 스타일
+- REST 엔드포인트는 소문자 kebab/camel 없이 /api/points/earn, /api/points/use처럼 명사/동사 혼합 단수형으로 유지.
+로그/이벤트 키, Kafka 토픽 등 외부 명칭은 인프라 설정 파일에서 별도 상수로 관리(필요 시 추출).
+적용 원칙
+
+- 새 클래스/메소드 추가 시 위 규칙을 우선 적용하고, 기존과 충돌할 경우 기존 패턴을 우선한다.
+명명으로 역할이 드러나야 하며, 약어는 도메인에 충분히 알려진 경우만 사용한다.
+파일/클래스 이동 시 패키지 루트(com.study.point)를 기준으로 정렬한다.
