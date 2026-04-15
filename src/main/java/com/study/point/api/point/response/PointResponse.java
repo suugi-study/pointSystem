@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record PointResponse(
         Long walletId,
-        Long memberId,
+        String memberId,
         long balance,
         LocalDateTime updatedAt
 ) {

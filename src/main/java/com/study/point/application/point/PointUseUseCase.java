@@ -24,7 +24,7 @@ public class PointUseUseCase {
     private final PointWalletRepository pointWalletRepository;
     private final RedisLockManager redisLockManager;
 
-    public PointResponse use(Long memberId, long amount, Long orderId) {
+    public PointResponse use(String memberId, long amount, Long orderId) {
         String lockKey = "lock:wallet:" + memberId;
         // 1단계 게이트(경량): Redis 락으로 단기간 겹침만 필터링 (TPS 1000 시 큐 폭증 방지)
         String token = redisLockManager.tryLock(lockKey, Duration.ofSeconds(5));

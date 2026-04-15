@@ -12,12 +12,15 @@ import jakarta.validation.constraints.Size;
  * @param expireInDays 만료까지 남은 일수(1~1825)
  * @param manual      관리자가 수기 지급한 경우 true
  * @param requestId   멱등성 키(없으면 서버가 UUID 생성)
+ * @param pointType 포인트 타입 (관리자 수기지급, 이벤트, 적립 ...)
  */
 public record EarnPointRequest(
-        @NotNull Long memberId,
+        @NotNull String memberId,
         @Min(1) @Max(100_000) long amount,
         @Min(1) @Max(1825) int expireInDays,
         boolean manual,
-        @Size(max = 100) String requestId
+
+        @Size(max = 100) String requestId,
+        String pointType
 ) {
 }

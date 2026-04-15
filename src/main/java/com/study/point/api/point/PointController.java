@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,24 +35,26 @@ public class PointController {
 
     /**
      * 포인트 적립
-     * - 1회 최대 10만 포인트, 만료일 최소 1일~최대 5년(=1825일) 검증은 DTO @Valid 로 수행
+     * - 요청을 검증 후 Kafka point-earn 토픽에 발행하고 202 Accepted를 반환한다.
+     * - 실제 적립 처리는 Consumer가 비동기로 수행한다.
      * - requestId 미지정 시 서버에서 UUID 생성하여 멱등성 확보
-     * - 기본 sourceType은 ADMIN_GRANT, sourceId는 비워둠(추후 주문/이벤트 등 전달 시 확장)
      */
     @PostMapping("/earn")
-    public ApiResponse<PointResponse> earn(@Valid @RequestBody EarnPointRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> earn(@Valid @RequestBody EarnPointRequest request) {
+        String requestId = request.requestId() != null ? request.requestId() : UUID.randomUUID().toString();
         EarnPointCommand command = new EarnPointCommand(
                 request.memberId(),
                 request.amount(),
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(request.expireInDays()),
                 request.manual(),
-                "ADMIN_GRANT", // sourceType: 기본값(관리자 지급). 주문/이벤트 시 확장 가능.
+                request.pointType(), // sourceType: 기본값(관리자 지급). 주문/이벤트 시 확장 가능.
                 null,          // sourceId: 원천 식별자(주문번호 등). 현재는 생략.
-                request.requestId() != null ? request.requestId() : UUID.randomUUID().toString() // 멱등 키
+                requestId
         );
-        PointResponse response = pointEarnUseCase.earn(command);
-        return ApiResponse.ok(response);
+        pointEarnUseCase.earn(command);
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(ApiResponse.ok(Map.of("requestId", requestId)));
     }
 
     /**

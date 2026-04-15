@@ -7,5 +7,5 @@ import java.util.Optional;
 public interface PointWalletRepository {
     PointWallet save(PointWallet wallet);
 
-    Optional<PointWallet> findByMemberId(Long memberId);
+    Optional<PointWallet> findByMemberId(String memberId);
 }

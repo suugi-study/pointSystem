@@ -52,7 +52,7 @@ PointWallet {
 
     @Column(name = "member_id", nullable = false, unique = true)
     @Comment("회원 ID (1:1 고유 지갑)")
-    private Long memberId;
+    private String memberId;
 
     @Column(name = "free_balance", nullable = false)
     @Comment("현재 사용 가능한 무료 포인트 잔액")
@@ -81,7 +81,7 @@ PointWallet {
     @Comment("지갑 최종 수정 시각")
     private LocalDateTime updatedAt;
 
-    private PointWallet(Long memberId) {
+    private PointWallet(String memberId) {
         this.memberId = memberId;
         this.freeBalance = 0L;
         this.totalEarned = 0L;
@@ -89,7 +89,7 @@ PointWallet {
         this.version = 0L;
     }
 
-    public static PointWallet create(Long memberId) {
+    public static PointWallet create(String memberId) {
         return new PointWallet(memberId);
     }
 
