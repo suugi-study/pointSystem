@@ -102,8 +102,47 @@ com.study.ponint
 
 ---
 
-## 전체 흐름
+## 적립
+```aiignore
 
+1. Kafka 구조.
+
+Producer (PointEventProducer)
+  key = memberId  →  Kafka 기본 해시 파티셔너가 파티션 결정
+                     ┌─────────────────────────────────────────┐
+                     │             토픽: point-earn             │
+                     │  ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+                     │  │partition0│ │partition1│ │partition2│ │
+                     │  │ mem=102  │ │ mem=100  │ │ mem=101  │ │
+                     │  └──────────┘ └──────────┘ └──────────┘ │
+                     └─────────────────────────────────────────┘
+                           ↓              ↓              ↓
+              컨슈머 그룹: point-wallet (concurrency=3)
+                      [thread-0]    [thread-1]    [thread-2]
+                      1:1 담당      1:1 담당      1:1 담당
+                           ↓              ↓              ↓
+                     EarnPointProcessor (requestId 중복 체크 → DB 저장)
+  
+  2. 적립 흐름도.                   
+                     
+                                    [클라이언트]
+                                       |
+                                       v
+                                    [API 서버]
+                                       |
+                                       |  (Kafka에 적립 요청 넣음)
+                                       v
+                                    [Kafka 토픽: point-earn]
+                                       |
+                                       |  (컨슈머가 읽음)
+                                       v
+                                    [Consumer]
+                                       |
+                                       v
+                                    [Oracle DB]
+
+
+```
 ```text
 [클라이언트]
     |
@@ -123,7 +162,88 @@ com.study.ponint
 
 ```
 
--------------------
+---
+
+## 로그 설정
+
+### 설정 파일 구조
+
+```
+src/main/resources/
+├── application.yml          # logging.config 프로파일 연결
+└── log4j2-local.xml         # 로컬 환경 log4j2 설정
+```
+
+`application.yml`에서 활성 프로파일에 따라 log4j2 설정 파일을 자동으로 선택한다.
+
+```yaml
+# application.yml
+logging:
+  config: classpath:log4j2-${spring.profiles.active:local}.xml
+```
+
+프로파일이 없으면 기본값으로 `log4j2-local.xml`이 로드된다.
+
+---
+
+### 로컬 실행 방법 (VM 옵션)
+
+**IntelliJ IDEA Run Configuration**
+
+```
+-Dspring.profiles.active=local
+```
+
+`Run > Edit Configurations > VM options` 에 추가한다.
+
+**Gradle 명령줄 실행**
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
+또는
+
+```bash
+./gradlew bootRun -Dspring.profiles.active=local
+```
+
+**JAR 직접 실행**
+
+```bash
+java -Dspring.profiles.active=local -jar build/libs/pointWallet-0.0.1-SNAPSHOT.jar
+```
+
+---
+
+### 로컬 로그 레벨
+
+| 패키지 | 레벨 | 설명 |
+|---|---|---|
+| `com.study.point` | `DEBUG` | 프로젝트 전체 코드 |
+| `org.springframework` | `INFO` | 프레임워크 기동 흐름 |
+| `org.hibernate.SQL` | `DEBUG` | 실행 쿼리 출력 |
+| `org.apache.kafka` | `WARN` | Kafka 내부 로그 억제 |
+| `org.springframework.kafka` | `INFO` | Consumer/Producer 이벤트 |
+| `io.lettuce`, `io.netty` | `WARN` | Redis 커넥션 노이즈 억제 |
+| `com.zaxxer.hikari` | `WARN` | 커넥션 풀 이상 시만 출력 |
+
+로그 파일은 프로젝트 루트의 `logs/pointwallet.log` 에 기록되며, 날짜 기준으로 롤링되어 7일간 보관된다.
+
+---
+
+### 환경별 설정 파일 확장
+
+새 환경이 추가될 경우 아래 규칙에 따라 파일을 추가한다.
+
+```
+log4j2-local.xml   → spring.profiles.active=local
+log4j2-dev.xml     → spring.profiles.active=dev
+log4j2-prod.xml    → spring.profiles.active=prod
+```
+
+---
+
 ## Naming Conventions
 본 프로젝트에서 사용 중인(또는 앞으로 사용할) 메소드·필드·클래스·패키지 명명 규칙을 정리했다. Java/Spring 표준과 현재 코드 패턴을 기준으로 한다.
 
