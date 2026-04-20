@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    # Oracle 대신 H2 인메모리 DB 사용 (테스트 시 Oracle 불필요)
+    # Oracle 호환 모드(MODE=Oracle)로 Oracle 방언(DUAL, ROWNUM 등) 일부 지원
+    url: jdbc:h2:mem:testdb;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트 시작 시 스키마 생성, 종료 시 삭제
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+        show_sql: false
+    open-in-view: false
+
+  data:
+    redis:
+      # 테스트 시 실제 Redis 대신 자동 구성만 남겨둠
+      # Redis 연결이 필요한 테스트는 @SpringBootTest + TestContainers 또는
+      # @MockBean RedisConnectionFactory 로 별도 처리한다
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}  # @EmbeddedKafka 가 있으면 주입값 사용, 없으면 기본값 사용
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false
+
+  # 테스트 시 Redis 세션 비활성화 (실제 Redis 연결 불필요)
+  session:
+    store-type: none
+
+  autoconfigure:
+    exclude:
+      # 실제 Redis 연결 시도를 막아 컨텍스트 로드 실패 방지
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+
+logging:
+  level:
+    root: WARN
+    com.study.point: INFO
+    org.hibernate.SQL: DEBUG

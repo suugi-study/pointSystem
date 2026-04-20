@@ -1,0 +1,43 @@
+2026-04-20 22:37:16.305 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - Starting PointWalletApplicationTests using Java 25.0.1 with PID 19242 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:37:16.307 [    Test worker] DEBUG c.s.p.PointWalletApplicationTests        - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:37:16.307 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:37:18.140 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19242 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:37:18.141 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:37:18.141 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:37:18.605 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.478 seconds (process running for 2.885)
+2026-04-20 22:39:57.904 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19327 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:39:57.905 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:39:57.906 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:39:58.608 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.841 seconds (process running for 1.348)
+2026-04-20 22:43:08.982 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19510 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:43:08.984 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:43:08.984 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:43:09.669 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.819 seconds (process running for 1.288)
+2026-04-20 22:47:45.672 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - Starting PointWalletApplicationTests using Java 25.0.1 with PID 19655 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:47:45.673 [    Test worker] DEBUG c.s.p.PointWalletApplicationTests        - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:47:45.674 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:47:47.500 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19655 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:47:47.500 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:47:47.500 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:47:47.953 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.466 seconds (process running for 2.85)
+2026-04-20 22:56:31.044 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - Starting PointWalletApplicationTests using Java 25.0.1 with PID 19773 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:56:31.045 [    Test worker] DEBUG c.s.p.PointWalletApplicationTests        - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:56:31.045 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:56:33.064 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19773 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:56:33.065 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:56:33.065 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:56:33.529 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.478 seconds (process running for 3.062)
+2026-04-20 22:58:16.348 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - Starting PointWalletApplicationTests using Java 25.0.1 with PID 19847 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:58:16.349 [    Test worker] DEBUG c.s.p.PointWalletApplicationTests        - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:58:16.350 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:58:18.327 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19847 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:58:18.327 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:58:18.328 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:58:18.781 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.467 seconds (process running for 3.051)
+2026-04-20 22:58:31.090 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - Starting PointWalletApplicationTests using Java 25.0.1 with PID 19889 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:58:31.092 [    Test worker] DEBUG c.s.p.PointWalletApplicationTests        - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:58:31.092 [    Test worker] INFO  c.s.p.PointWalletApplicationTests        - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:58:33.060 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Starting PointControllerTest using Java 25.0.1 with PID 19889 (started by swchoi in /Users/swchoi/Desktop/workspace/pointWallet)
+2026-04-20 22:58:33.060 [    Test worker] DEBUG c.s.p.a.p.PointControllerTest            - Running with Spring Boot v3.5.12-SNAPSHOT, Spring v6.2.17
+2026-04-20 22:58:33.060 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - No active profile set, falling back to 1 default profile: "default"
+2026-04-20 22:58:33.520 [    Test worker] INFO  c.s.p.a.p.PointControllerTest            - Started PointControllerTest in 0.478 seconds (process running for 3.027)

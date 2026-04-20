@@ -13,5 +13,5 @@ import java.util.Optional;
 public interface PointWalletJpaRepository extends JpaRepository<PointWallet, Long>, PointWalletRepository {
     @Override
     @Lock(LockModeType.PESSIMISTIC_WRITE) // 동일 memberId에 대한 동시 적립/차감 충돌을 DB에서 마지막 방어선으로 직렬화
-    Optional<PointWallet> findByMemberId(Long memberId);
+    Optional<PointWallet> findByMemberId(String memberId);
 }

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <Properties>
+        <!-- 로컬 콘솔 출력용 패턴: 시간 / 스레드 / 레벨(색상) / 로거명(축약) / 메시지 -->
+        <Property name="CONSOLE_PATTERN">
+            %d{HH:mm:ss.SSS} [%15.15t] %highlight{%-5level}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=white} %cyan{%-40.40c{1.}} - %msg%n%throwable
+        </Property>
+
+        <!-- 로그 파일 저장 경로 (로컬 실행 기준) -->
+        <Property name="LOG_DIR">logs</Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- ────────────────────────────────────────────────
+             콘솔 Appender
+             - 로컬에서 가장 먼저 보는 출력
+             - ANSI 색상으로 레벨 구분 (WARN=노랑, ERROR=빨강)
+        ──────────────────────────────────────────────── -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${CONSOLE_PATTERN}" disableAnsi="false"/>
+        </Console>
+
+        <!-- ────────────────────────────────────────────────
+             파일 Appender (Rolling)
+             - 로컬에서도 긴 스택 트레이스나 Kafka 로그를
+               파일로 확인할 때 유용
+             - 날짜 기준으로 롤링, 최대 7일 보관
+        ──────────────────────────────────────────────── -->
+        <RollingFile name="File"
+                     fileName="${LOG_DIR}/pointwallet.log"
+                     filePattern="${LOG_DIR}/pointwallet-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%15.15t] %-5level %-40.40c{1.} - %msg%n%throwable"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="7"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+
+        <!-- ── 프로젝트 패키지: DEBUG ───────────────────── -->
+        <Logger name="com.study.point" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <!-- ── Spring Framework: INFO ─────────────────── -->
+        <Logger name="org.springframework" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- ── Hibernate SQL: 쿼리 확인용 DEBUG ─────────
+             쿼리가 너무 많이 찍히면 INFO로 올리세요.      -->
+        <Logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <!-- 바인딩 파라미터 확인이 필요하면 아래 주석 해제 -->
+        <!--
+        <Logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        -->
+
+        <!-- ── Kafka 클라이언트: WARN ─────────────────────
+             Kafka 내부 로그(NetworkClient, Fetcher 등)는
+             INFO도 매우 많으므로 WARN으로 억제           -->
+        <Logger name="org.apache.kafka" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <!-- Spring Kafka (Consumer/Producer 이벤트): INFO -->
+        <Logger name="org.springframework.kafka" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- ── Redis (Lettuce): WARN ──────────────────── -->
+        <Logger name="io.lettuce" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="io.netty" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- ── HikariCP 커넥션 풀: WARN ─────────────────
+             커넥션 타임아웃 등 이슈 발생 시 ERROR로 감지 -->
+        <Logger name="com.zaxxer.hikari" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- ── Root: 위에서 처리 못한 나머지는 INFO ───── -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>

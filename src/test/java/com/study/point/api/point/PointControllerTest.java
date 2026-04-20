@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,12 +46,10 @@ class PointControllerTest {
     class Earn {
 
         @Test
-        @DisplayName("유효한 요청이면 200 OK와 ApiResponse.success=true 를 반환한다")
+        @DisplayName("유효한 요청이면 202 Accepted와 requestId를 반환한다")
         void earn_success() throws Exception {
             // given
-            EarnPointRequest request = new EarnPointRequest(1L, 10_000L, 30, false, "req-123");
-            PointResponse response = new PointResponse(101L, 1L, 20_000L, LocalDateTime.of(2024, 5, 1, 10, 0));
-            when(pointEarnUseCase.earn(any(EarnPointCommand.class))).thenReturn(response);
+            EarnPointRequest request = new EarnPointRequest("1", 10_000L, 30, false, "req-123", "ORDER");
 
             // when & then
             mockMvc.perform(
@@ -60,26 +57,22 @@ class PointControllerTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request))
                     )
-                    .andExpect(status().isOk())
+                    .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.walletId").value(101))
-                    .andExpect(jsonPath("$.data.memberId").value(1))
-                    .andExpect(jsonPath("$.data.balance").value(20_000));
+                    .andExpect(jsonPath("$.data.requestId").value("req-123"));
         }
 
         @Test
         @DisplayName("requestId가 비어 있어도 컨트롤러가 멱등 키를 생성해 유스케이스로 전달한다")
         void earn_generatesRequestId() throws Exception {
-            EarnPointRequest request = new EarnPointRequest(2L, 5_000L, 10, true, null);
-            PointResponse response = new PointResponse(202L, 2L, 5_000L, LocalDateTime.now());
-            when(pointEarnUseCase.earn(any(EarnPointCommand.class))).thenReturn(response);
+            EarnPointRequest request = new EarnPointRequest("2", 5_000L, 10, true, null, "ADMIN_GRANT");
 
             mockMvc.perform(
                             post("/api/points/earn")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(objectMapper.writeValueAsString(request))
                     )
-                    .andExpect(status().isOk());
+                    .andExpect(status().isAccepted());
 
             // then
             ArgumentCaptor<EarnPointCommand> captor = ArgumentCaptor.forClass(EarnPointCommand.class);
@@ -92,7 +85,7 @@ class PointControllerTest {
         @DisplayName("검증 오류가 있으면 400 Bad Request 를 반환한다")
         void earn_validationFail() throws Exception {
             // amount = 0 -> @Min(1) 위반
-            EarnPointRequest invalid = new EarnPointRequest(1L, 0L, 10, false, "req");
+            EarnPointRequest invalid = new EarnPointRequest("1", 0L, 10, false, "req", "ORDER");
 
             mockMvc.perform(
                             post("/api/points/earn")
@@ -109,8 +102,8 @@ class PointControllerTest {
         @Test
         @DisplayName("유효한 요청이면 200 OK와 ApiResponse.success=true 를 반환한다")
         void use_success() throws Exception {
-            UsePointRequest request = new UsePointRequest(3L, 7_000L, 99L);
-            PointResponse response = new PointResponse(303L, 3L, 13_000L, LocalDateTime.of(2024, 6, 1, 12, 0));
+            UsePointRequest request = new UsePointRequest("3", 7_000L, 99L);
+            PointResponse response = new PointResponse(303L, "3", 13_000L, LocalDateTime.of(2024, 6, 1, 12, 0));
             when(pointUseUseCase.use(request.memberId(), request.amount(), request.orderId())).thenReturn(response);
 
             mockMvc.perform(
@@ -120,7 +113,7 @@ class PointControllerTest {
                     )
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.memberId").value(3))
+                    .andExpect(jsonPath("$.data.memberId").value("3"))
                     .andExpect(jsonPath("$.data.balance").value(13_000));
         }
 

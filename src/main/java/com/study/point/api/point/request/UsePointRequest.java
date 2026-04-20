@@ -1,6 +1,7 @@
 package com.study.point.api.point.request;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -11,7 +12,7 @@ import jakarta.validation.constraints.NotNull;
  * @param orderId  어느 주문에서 사용했는지 추적하기 위한 주문 ID
  */
 public record UsePointRequest(
-        @NotNull Long memberId,
+        @NotBlank String memberId,
         @Min(1) long amount,
         @NotNull Long orderId
 ) {

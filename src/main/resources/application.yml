@@ -6,6 +6,36 @@ spring:
     username: point_app
     password: PointApp123!
     driver-class-name: oracle.jdbc.OracleDriver
+    # ───────────────────────────────────────────────────────────────────
+    # [신규] HikariCP 커넥션 풀 튜닝
+    #
+    # [배포 전제] 2대 서버 × 3 인스턴스 = 총 6 인스턴스
+    #
+    # [개념] 커넥션 풀이란?
+    #   - DB 연결은 TCP 핸드셰이크 + 인증 과정이 있어 생성 비용이 큼
+    #   - 애플리케이션이 커넥션을 미리 만들어두고 재사용하는 '풀(Pool)'을 운영
+    #   - HikariCP는 Spring Boot 기본 풀 구현체 (가장 빠름)
+    #
+    # [계산 근거]
+    #   - 인스턴스당 필요 커넥션 = (API 스레드 + Consumer 스레드 3개) × 피크 동시 실행률
+    #   - maximum-pool-size = 20
+    #     → 6 인스턴스 × 20 = 120 커넥션 (Oracle sessions 제한 확인 필수)
+    #   - minimum-idle = 5
+    #     → 유휴 시에도 최소 5개 유지 → 갑작스런 요청에 즉시 대응
+    #   - connection-timeout = 3000ms
+    #     → 풀이 고갈되면 3초 대기 후 예외 발생 (지나치게 오래 block되지 않게)
+    #   - max-lifetime = 1,800,000ms (30분)
+    #     → Oracle 방화벽/NAT가 유휴 커넥션을 끊기 전에 선제 재생성
+    #   - validation-timeout = 250ms
+    #     → 커넥션 유효성 확인 시 타임아웃
+    # ───────────────────────────────────────────────────────────────────
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 3000
+      validation-timeout: 250
+      max-lifetime: 1800000
+      pool-name: PointWalletHikariPool
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,29 +53,21 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all        # 모든 복제본이 확인해야 성공 처리 (메시지 유실 방지)
+      retries: 3       # 일시적 오류 시 재시도
       properties:
+        enable.idempotence: true   # 재시도 시 중복 발행 방지
         spring:
           json:
             add:
               type:
                 headers: false
-    consumer:
-      group-id: point-wallet
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring:
-          json:
-            trusted:
-              packages: com.study.point.domain.point.entity
+    # consumer 설정은 KafkaConfig.java의 earnConsumerFactory()에서
+    # 직접 Map으로 구성하므로 여기서는 정의하지 않는다.
+    # (Spring Boot 자동 구성 consumer factory를 사용하지 않음)
 
 server:
   port: 8080
 
 logging:
-  level:
-    root: INFO
-    org.springframework: INFO
-    com.study.point: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  config: classpath:log4j2-${spring.profiles.active:local}.xml
